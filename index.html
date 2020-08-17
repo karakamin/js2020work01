@@ -1,0 +1,154 @@
+<!-- 本作業有參考範例程式碼 -->
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>js 作業 01</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+  </head>
+  <style>
+    .completed {
+      text-decoration: line-through;
+    }
+  </style>
+  <body>
+    <div id="app" class="container my-3">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">待辦事項</span>
+        </div>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="準備要新增的任務"
+          id="newTodo"
+        />
+        <div class="input-group-append">
+          <button class="btn btn-primary" type="button" id="addTodo">
+            新增
+          </button>
+        </div>
+      </div>
+      <div class="card text-center">
+        <ul class="list-group list-group-flush text-left" id="todoList"></ul>
+        <div class="card-footer d-flex justify-content-between">
+          <span>還有 <span id="taskCount">0</span> 筆任務</span>
+          <a href="#" id="clearTask">清除所有任務</a>
+        </div>
+      </div>
+    </div>
+    <script>
+      // 取得各項功能鍵及欄位的 DOM 元素
+      var todoInput = document.getElementById('newTodo');           // 準備要新增任務的欄位
+      var addBtn = document.getElementById('addTodo');             // 新增功能鍵
+      var clearAllBtn = document.getElementById('clearTask');     // 清除所有任務功能鍵
+      var todoList = document.getElementById('todoList');        // 待辦事項清單區塊
+      var countTodo = document.getElementById('taskCount');    // 待辦事項總數
+
+      // 監聽 click 事件，並執行對應函式
+      addBtn.addEventListener('click', addTodo);   // 點選新增功能鍵的函式
+      clearAllBtn.addEventListener('click', clearAllTask);  // 點選清除所有任務功能鍵時執行的函式
+      todoList.addEventListener('click', doSomething);    // 判斷核取方塊及刪除時的對應動作
+
+      // 建立空資料陣列
+      var todoData = []
+      renderPage(todoData);
+
+      // 新增資料
+      function addTodo() {
+          var newTodo = todoInput.value.trim();  // 從 todoInput 取得資料並前後去空白
+          var timeStamp = Math.floor(Date.now()); // Math.floor() 函式會回傳小於等於所給數字的最大整數
+          // Date.now() 方法回傳自 1970/01/01 00:00:00 UTC 起經過的毫秒數。
+          // console.log(Date.now());
+          if (newTodo !== '') {  //當 newTodo 不為空時，新增資料至 todoData
+              todoData.push({
+                  id: timeStamp,
+                  title: newTodo,
+                  completed: false,
+              })
+              // console.log(todoData);
+              renderPage(todoData);
+              todoInput.value ='';
+          }
+
+      }
+
+      // 刪除資料
+      function removeTodo(id) {  // 帶入指定 id
+          var newIndex = 0;
+          todoData.forEach((item, key) => {
+              if (id == item.id) {
+                  newIndex = key;
+                  console.log(newIndex);
+              }
+          });
+          todoData.splice(newIndex, 1);
+          renderPage(todoData);
+      }
+
+      // 用以判斷 completed 狀態
+      function completeTodo(id) {
+          todoData.forEach((item) => {
+              if (id == item.id) {
+                  // console.log(item.completed);
+                  // 三元運算子在條件後面會跟著 "?"，若條件為 true，則在冒號前的表達式會被執行，反之條件為 false 則在冒號後的表達式會被執行
+                  item.completed = item.completed ? false : true;
+                  console.log(item.completed);
+              }
+          });
+          renderPage(todoData);
+      }
+
+      // 清除所有待辦事項
+      function clearAllTask(event) {
+          // console.log(e);
+          event.preventDefault(); // 取消預設動作
+          todoData = [];
+          renderPage(todoData);
+      }
+
+      function doSomething(event) {
+          // console.log(event);
+          // 取出畫面上 data-action 的屬性
+          var action = event.target.parentNode.dataset.action;
+          // 取出畫面 data-id 的屬生
+          var id = event.target.parentNode.dataset.id;
+          if (action =='remove') {
+              removeTodo(id)
+          } else if (action === 'complete') {
+              completeTodo(id)
+          }
+      }
+      
+      // 繪製畫面
+      function renderPage(data) {
+          // console.log(data);
+          var string ='';
+          /* data-id 放入 item.id 值，用以 JS 判斷使用
+           * item.completeed 為用以顯示核取方塊的 chedcked 效果、以及刪除線效果套用至指定的 item.title 上面
+           */
+          data.forEach((item) => {
+            string += `<li class="list-group-item">
+              <div class="d-flex">
+                <div class="form-check" data-action="complete" data-id ="${item.id}">
+                    <input type="checkbox" class="form-check-input" ${item.completed ? 'checked' : '' }>
+                    <label class="form-check-label ${item.completed ? 'completed' : '' }"> ${item.title}</label>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm ml-auto" aria-label="Close" data-action="remove" data-id="${item.id}">
+                    <span aria-hidden="true">刪除</span>
+                </button>
+              </div>
+            </li>`;
+          });
+          todoList.innerHTML = string;
+          countTodo.textContent = data.length;
+      }
+    </script>
+  </body>
+</html>
